@@ -1,88 +1,49 @@
 object Application extends App {
 
-  // DATA
-  val sample = io.Source.fromFile("C:\\scala-projects\\scala-docker\\src\\main\\resources\\harvest.csv")
+  if (args.length < 0) {
+    println("ERROR: lack of argument")
+    sys.exit(-1)
+  }
+  val path = args(0)  // C:\scala-projects\scala-docker\src\main\resources\harvest.csv
 
-  val rows = sample.getLines.foldLeft(Seq.empty[Seq[String]]) { (result, line) =>
-    result :+ line.split(",").toSeq
-  }.tail
-
-
-  // METHODS
-
-  def selectName(name: String, data: Seq[Seq[String]]): Seq[Seq[String]] = {
-    data.foldLeft(Seq.empty[Seq[String]]) { (result, seq) =>
-      if (seq.head == name) result :+ seq
-      else result
-    }
+  if (args.length < 1) {
+    println("ERROR: lack of argument")
+    sys.exit(-1)
   }
 
-  def maxAmount(data: Seq[Seq[String]]): Seq[String] = {
-    data.foldLeft(data.head) { (result, seq) =>
-      if (seq.last.toDouble > result.last.toDouble) seq
-      else result
-    }
-  }
+  val path1 = args(1)  // C:\\scala-projects\\scala-docker\\src\\main\\resources\\prices.csv
 
-  def selectMonth(monthNumber: String): Seq[Seq[String]] = {
-    rows.foldLeft(Seq.empty[Seq[String]]) { (result, seq) =>
-      if (seq(1).contains(monthNumber)) result :+ seq
-      else result
-    }
-  }
+  val ha = HarvestAnalysis(path)
 
-  def sumAmounts(data: Seq[Seq[String]]): Double = {
-    data.foldLeft(data.head.last.toDouble) { (result, seq) =>
-      result + seq.last.toDouble
-    }
-  }
+  // BEST WORKER
 
-  def bestInMonth(month: String): Seq[String] = {
-    val selectedMon = selectMonth(month)
-    val namesAndAmounts = listOfNames.map(name => Seq(name, sumAmounts(selectName(name, selectedMon)).toString))
-    maxAmount(namesAndAmounts)
-  }
+  // Best worker in each month
+  val bestIEachMonth = ha.listOfMonths.map(month => ha.bestInMonth(month).dropRight(1) :+ month.mkString)
+  println("List of best gatherers in each month: " + bestIEachMonth)
 
-  def bestByFruit(fruit: String): Seq[String] = {
-    val selectedFruit = selectFruits(fruit)
-    val namesAndAmountsForFruits = listOfNames.map(name => Seq(name, sumAmounts(selectName(name, selectedFruit)).toString))
-    maxAmount(namesAndAmountsForFruits)
-  }
+  // Best worker in fruit group
+  val bestByEachFruit = ha.listOfFruits.map(fruit => ha.bestByFruit(fruit).dropRight(1) :+ fruit.mkString)
+  println("List of best gatherers by type of fruit" + bestByEachFruit)
 
+  // BEST FRUITS
 
-  def selectFruits(fruit: String): Seq[Seq[String]] = {
-    rows.foldLeft(Seq.empty[Seq[String]]) { (result, seq) =>
-      if (seq(2).contains(fruit)) result :+ seq
-      else result
-    }
-  }
+  val pa = PricesAnalysis(path1)
 
-  // VALUES
-  val listOfMonths = rows.foldLeft(Seq.empty[String]) { (result, seq) =>
-    result :+ seq(1).take(7)
-  }.distinct
+  // best earning fruit in whole year
+  val bestFruitOverall = pa.maxAmount(pa.fruitsPricesOverall).dropRight(1)
+  println("Most profitable fruit in a whole year: " + bestFruitOverall.head)
 
-  val listOfNames = rows.foldLeft(Seq.empty[String]) { (result, seq) =>
-    result :+ seq.head
-  }.distinct
+  // best earning fruit in each month
+  val bestFruitByMonth = pa.listOfMonths.map(month => pa.bestFruitInMonth(month).dropRight(1) :+ month)
+  println("List of most profitable fruit in each month: " + bestFruitByMonth)
 
-  val listOfFruits = rows.foldLeft(Seq.empty[String]) { (result, seq) =>
-    result :+ seq(2)
-  }.distinct
+  // worst earning fruit in whole year
+  val worstFruitOverall = pa.minAmount(pa.fruitsPricesOverall).dropRight(1)
+  println("Least profitable fruit in a whole year: " + worstFruitOverall.head)
 
-
-  // BEST IN A MONTH
-//  println(listOfMonths, listOfFruits, listOfNames)
-
-  val bestIEachMonth = listOfMonths.map(month => bestInMonth(month) :+ month.mkString)
-  println(bestIEachMonth)
-
-  val bestByEachFruit = listOfFruits.map(fruit => bestByFruit(fruit) :+ fruit.mkString)
-  println(bestByEachFruit)
-
-
-  sample.close
-
+  // worst earning fruit in each month
+  val worstFruitByMonth = pa.listOfMonths.map(month => pa.worstFruitInMonth(month).dropRight(1) :+ month)
+  println("List of least profitable fruit in each month: " + worstFruitByMonth)
 }
 
 
