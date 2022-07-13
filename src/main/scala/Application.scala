@@ -4,14 +4,14 @@ object Application extends App {
     println("ERROR: lack of argument")
     sys.exit(-1)
   }
-  val path = args(0) // C:\scala-projects\scala-docker\src\main\resources\harvest.csv
+  val path = args(0)
 
   if (args.length < 1) {
     println("ERROR: lack of argument")
     sys.exit(-1)
   }
 
-  val path1 = args(1) // C:\\scala-projects\\scala-docker\\src\\main\\resources\\prices.csv
+  val path1 = args(1)
 
   import CommonMethods._
 
